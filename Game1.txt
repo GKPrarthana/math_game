@@ -36,3 +36,198 @@
 			
             position: relative; /* Add position relative for absolute positioning */
         }
+
+	
+        .question {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .option {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .option:hover {
+            background-color: #45a049;
+        }
+
+        .score,
+        #time-container {
+            font-weight: bold;
+            margin-top: 20px;
+            position: absolute;
+        }
+		#score{
+			left:20px;
+		}
+
+        #time-container {
+            right: 10px;
+        }
+		
+    </style>
+</head>
+
+<body>
+
+    <div class="game-container">
+        <div class="game">
+            
+			<div id="question-container" class="question"></div>
+            <div class="options" id="options-container"></div>
+            <div class="score" id="score">Score: 0</div>
+			<div id="time-container"></div>
+			
+        </div>
+    </div>
+
+    <script>
+        let points = 0;
+        let currentQuestionIndex = 0;
+        let questions = generateRandomQuestions(100);
+		let startTime;
+		let totalElapsedTime = 0; // Variable to store the total time spent across questions
+		let timeContainer;
+		
+		
+        function generateRandomQuestions(count) {
+            const generatedQuestions = [];
+            for (let i = 0; i < count; i++) {
+                const num1 = Math.floor(Math.random() * 10) + 1; // Random number between 1 and 10
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const operator = Math.random() < 0.5 ? '+' : '-';
+                const question = `${num1} ${operator} ${num2}`;
+                const correctAnswer = eval(question);
+                const options = generateAnswerOptions(correctAnswer);
+                generatedQuestions.push({ question, options, correctAnswer: correctAnswer.toString() });
+            }
+            return generatedQuestions;
+        }
+
+        function generateAnswerOptions(correctAnswer) {
+            const options = [correctAnswer];
+            while (options.length < 4) {
+                const randomOption = Math.floor(Math.random() * 20) + 1;
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {			
+			timeContainer = document.getElementById('time-container');
+            displayQuestion();
+            updateScore();
+			
+			startTime = new Date();
+			updateTime();
+        }
+
+        function displayQuestion() {
+    const questionObj = questions[currentQuestionIndex];
+    const questionContainer = document.getElementById('question-container');
+    const optionsContainer = document.getElementById('options-container');
+
+    // Display question number and text
+    questionContainer.innerHTML = `<h2>Question ${currentQuestionIndex + 1}</h2>${questionObj.question}`;
+
+    // Clear previous options
+    optionsContainer.innerHTML = '';
+
+    // Display answer options
+    questionObj.options.forEach(option => {
+        const optionElement = document.createElement('div');
+        optionElement.classList.add('option');
+        optionElement.textContent = option;
+        optionElement.onclick = () => checkAnswer(option, questionObj.correctAnswer);
+        optionsContainer.appendChild(optionElement);
+    });
+}
+
+        function checkAnswer(userAnswer, correctAnswer) {
+    const isCorrect = userAnswer.toString() === correctAnswer.toString();
+
+    if (isCorrect) {
+        const endTime = new Date(); // Record the end time
+        const elapsedTime = (endTime - startTime) / 1000; // Calculate time in seconds
+        totalElapsedTime += elapsedTime; // Add the time spent on the current question
+        points += 10;
+        // Provide feedback for correct answer and total time taken
+        alert(`Correct! Total time taken: ${formatTime(totalElapsedTime)}`);
+
+        // Move to the next question or end the game
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            displayQuestion();
+            startTime = new Date();
+            updateTime();
+        } else {
+            endGame();
+        }
+    } else {
+        // Provide feedback for wrong answer
+        alert("Wrong! Try again.");
+    }
+
+    // Update points
+    updateScore();
+}
+
+		
+		
+        function updateScore() {
+            const scoreElement = document.getElementById('score');
+            scoreElement.textContent = `Score: ${points}`;
+        }
+		
+		function updateTime() {
+    const currentTime = new Date();
+    const timeTakenSoFar = (currentTime - startTime) / 1000 + totalElapsedTime; // Include total elapsed time
+    timeContainer.textContent = `Total time taken: ${formatTime(timeTakenSoFar)}`;
+    // Update the time every second
+    setTimeout(updateTime, 1000);
+}
+
+
+        function pauseGame() {
+			const endTime = new Date(); // Record the end time when the game is paused
+            const timeTaken = (endTime - startTime) / 1000; // Calculate time in seconds
+            alert("Game paused. Click 'OK' to resume.");
+        }
+
+        function endGame() {
+            // Optionally, you can display a message or redirect the user to another page.
+            alert(`Game Over! Your total points: ${points}`);
+        }
+		
+		function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+        }
+
+        function pad(number) {
+            return number < 10 ? '0' + number : number;
+        }
+
+        // Start the game
+        startGame();
+    </script>
+
+</body>
+
+</html>
